@@ -47,77 +47,38 @@ router.beforeEach((to, from, next) => {
   //   return;
   // }
   if (publicPaths.includes(to.path) || !to.matched.some((record) => record.meta.auth)) {
- // 尝试恢复登录状态
- if (getStore('token') && !store.state.login) {
+    next();
+    return;
+  }
   axios.post('/api/validate',{}).then(res => {
-          // let data = res.data;
-          if (res.data.state === 1) {
-            // if (to.matched.some(record => record.meta.auth)) {
-            //   //未登录 跳转登录界面
-            //   next({
-            //     path: '/login',
-            //     query: {
-            //       redirect: to.fullPath
-            //     }
-            //   })
-            // } else {
-            //   next();
-            // }
-            store.commit('ISLOGIN', res.data);
-          }
-          // else {
+          let data = res.data;
+          if (data.state !== 1) {
+            if (to.matched.some(record => record.meta.auth)) {
+              //未登录 跳转登录界面
+              next({
+                path: '/login',
+                query: {
+                  redirect: to.fullPath
+                }
+              })
+            } else {
+              next();
+            }
+          }else {
              //保存用户信息
-            //  store.commit('ISLOGIN',data);
+             store.commit('ISLOGIN',data);
             //  if (to.path === '/login') {
             //    router.push({
             //      path: '/'
             //    })
             //  }
-            next();
-          
-        }).catch(err =>{
-          console.error('验证失败:', err.response?.data || err.message);
-          store.commit('LOGOUT');
-        next();
-      });
-    } else {
-      next();
-    }
-      return } 
-      axios
-        .post('/api/validate', {}, {
-          headers: {
-            'Content-Type': 'application/json'
-          },
-        })
-        .then((res) => {
-          if (res.data.state === 1) {
-            store.commit('ISLOGIN', res.data);
-            next();
-          } else {
-            store.commit('LOGOUT');
-            next({
-              path: '/login',
-              query: {
-                redirect: to.fullPath
-              }
-            });
+            
           }
-        })
-        .catch((err) => {
-          console.error('验证错误:', err.response?.data || err.message);
-          store.commit('LOGOUT');
-          next({
-            path: '/login',
-            query: {
-              redirect: to.fullPath
-            }
-          });
-        });
-      });
-
-      Vue.config.productionTip = false;
-
+        }).catch(err =>{
+          console.log(err)
+        }) 
+        next();
+      }) 
       new Vue({
       router,
       store,
